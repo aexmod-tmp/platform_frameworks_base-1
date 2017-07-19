@@ -6258,6 +6258,12 @@ public final class Settings {
         public static final String SEEK_BAR_BATTERY_CHARGE_LEVEL_SOUND = "battery_level_charge_seek_bar";
 
         /**
+         * Whether to display 4G icon instead LTE
+         * @hide
+         */
+        public static final String SHOW_FOURG_ICON = "show_fourg_icon";
+
+        /**
          * @hide
          */
         public static final String QS_LAYOUT_COLUMNS_LANDSCAPE = "qs_layout_columns_landscape";
