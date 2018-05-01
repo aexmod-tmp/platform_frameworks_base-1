@@ -306,6 +306,10 @@ public class StatusBar extends SystemUI implements
 
     private static final int MSG_OPEN_SETTINGS_PANEL = 1002;
     private static final int MSG_LAUNCH_TRANSITION_TIMEOUT = 1003;
+
+    protected static final int MSG_TOGGLE_FLASH_ON = 2028;
+    protected static final int MSG_TOGGLE_FLASH_OFF = 2029;
+
     // 1020-1040 reserved for BaseStatusBar
 
     // Time after we abort the launch transition.
@@ -391,6 +395,11 @@ public class StatusBar extends SystemUI implements
         mMessageRouter.sendMessage(msg);
     }
 
+    void resendMessageDelayed(int msg, int delay) {
+        mMessageRouter.cancelMessages(msg);
+        mMessageRouter.sendMessageDelayed(msg, delay);
+    }
+
     int getDisabled1() {
         return mDisabled1;
     }
@@ -448,6 +457,16 @@ public class StatusBar extends SystemUI implements
     /** */
     public void toggleCameraFlash() {
         mCommandQueueCallbacks.toggleCameraFlash();
+    }
+
+    /** */
+    public void toggleCameraFlashOn() {
+        mCommandQueueCallbacks.toggleCameraFlashOn();
+    }
+
+    /** */
+    public void toggleCameraFlashOff() {
+        mCommandQueueCallbacks.toggleCameraFlashOff();
     }
 
     /** */
@@ -949,6 +968,10 @@ public class StatusBar extends SystemUI implements
                 id -> dismissKeyboardShortcuts());
         mMessageRouter.subscribeTo(AnimateExpandSettingsPanelMessage.class,
                 data -> mCommandQueueCallbacks.animateExpandSettingsPanel(data.mSubpanel));
+        mMessageRouter.subscribeTo(MSG_TOGGLE_FLASH_ON,
+                id -> onToggleFlashOn());
+        mMessageRouter.subscribeTo(MSG_TOGGLE_FLASH_OFF,
+                id -> onToggleFlashOff());
         mMessageRouter.subscribeTo(MSG_LAUNCH_TRANSITION_TIMEOUT,
                 id -> onLaunchTransitionTimeout());
     }
@@ -3135,6 +3158,23 @@ public class StatusBar extends SystemUI implements
     public void startLaunchTransitionTimeout() {
         mMessageRouter.sendMessageDelayed(
                 MSG_LAUNCH_TRANSITION_TIMEOUT, LAUNCH_TRANSITION_TIMEOUT_MS);
+    }
+
+    private void onToggleFlashOn() {
+        if (mFlashlightController.isAvailable() && !mFlashlightController.isEnabled()) {
+            mFlashlightController.setFlashlight(true);
+            int delay = Settings.System.getIntForUser(mContext.getContentResolver(), Settings.System.FLASH_ON_CALLWAITING_DELAY, 200, UserHandle.USER_CURRENT);
+            mMessageRouter.sendMessageDelayed(MSG_TOGGLE_FLASH_OFF, delay);
+        }
+
+    }
+
+    private void onToggleFlashOff() {
+        if (mFlashlightController.isAvailable() && mFlashlightController.isEnabled()) {
+            mFlashlightController.setFlashlight(false);
+            int delay = Settings.System.getIntForUser(mContext.getContentResolver(), Settings.System.FLASH_ON_CALLWAITING_DELAY, 200, UserHandle.USER_CURRENT);
+            mMessageRouter.sendMessageDelayed(MSG_TOGGLE_FLASH_ON, delay);
+        }
     }
 
     private void onLaunchTransitionTimeout() {

@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.media.AudioAttributes;
+import android.provider.Settings;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.os.SystemClock;
@@ -664,6 +665,27 @@ public class StatusBarCommandQueueCallbacks implements CommandQueue.Callbacks {
             mShadeController.animateCollapsePanels();
         } else {
             animateExpandSettingsPanel(null);
+        }
+    }
+
+    @Override
+    public void toggleCameraFlashOn() {
+        if (mFlashlightController.isAvailable() && !mFlashlightController.isEnabled()) {
+            mFlashlightController.setFlashlight(true);
+            int delay = Settings.System.getIntForUser(mContext.getContentResolver(), Settings.System.FLASH_ON_CALLWAITING_DELAY, 200, UserHandle.USER_CURRENT);
+            mStatusBar.resendMessageDelayed(StatusBar.MSG_TOGGLE_FLASH_OFF, delay);
+        }
+    }
+
+    @Override
+    public void toggleCameraFlashOff() {
+
+//        mStatusBar.resendMessage(StatusBar.MSG_TOGGLE_FLASH_ON);
+        mStatusBar.resendMessage(StatusBar.MSG_TOGGLE_FLASH_OFF);
+
+        if (mFlashlightController.isAvailable()) {
+            mFlashlightController.setFlashlight(false);
+
         }
     }
 
