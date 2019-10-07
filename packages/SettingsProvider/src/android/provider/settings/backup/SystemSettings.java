@@ -103,5 +103,6 @@ public class SystemSettings {
         Settings.System.STATUS_BAR_BATTERY_STYLE,
         Settings.System.SHOW_BATTERY_PERCENT_INSIDE,
         Settings.System.FULLSCREEN_GESTURES,
+        Settings.System.DOZE_ON_CHARGE,
     };
 }
