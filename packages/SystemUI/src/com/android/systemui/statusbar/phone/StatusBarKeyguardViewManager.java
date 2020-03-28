@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.hardware.biometrics.BiometricSourceType;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.util.Log;
@@ -53,6 +54,7 @@ import com.android.keyguard.KeyguardUpdateMonitorCallback;
 import com.android.keyguard.KeyguardViewController;
 import com.android.keyguard.ViewMediatorCallback;
 import com.android.systemui.dagger.SysUISingleton;
+import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.dock.DockManager;
 import com.android.systemui.dreams.DreamOverlayStateController;
 import com.android.systemui.flags.FeatureFlags;
@@ -132,6 +134,7 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     @Nullable
     private final FoldAodAnimationController mFoldAodAnimationController;
     private KeyguardMessageAreaController<AuthKeyguardMessageArea> mKeyguardMessageAreaController;
+<<<<<<< HEAD
     private final PrimaryBouncerCallbackInteractor mPrimaryBouncerCallbackInteractor;
     private final PrimaryBouncerInteractor mPrimaryBouncerInteractor;
     private final BouncerView mPrimaryBouncerView;
@@ -150,6 +153,28 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
                 mPrimaryBouncerAnimating = false;
                 updateStates();
             }
+=======
+    private final BouncerCallbackInteractor mBouncerCallbackInteractor;
+    private final BouncerInteractor mBouncerInteractor;
+    private final BouncerViewDelegate mBouncerViewDelegate;
+    private final Lazy<com.android.systemui.shade.ShadeController> mShadeController;
+
+    private boolean mBouncerVisible = false;
+    private final BouncerExpansionCallback mExpansionCallback = new BouncerExpansionCallback() {
+        private boolean mBouncerAnimating;
+
+        @Override
+        public void onFullyShown() {
+            mBouncerAnimating = false;
+            updateStates();
+        }
+
+        @Override
+        public void onStartingToHide() {
+            mBouncerAnimating = true;
+            updateStates();
+        }
+>>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
 
             @Override
             public void onStartingToHide() {
@@ -176,10 +201,19 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
                 }
             }
 
+<<<<<<< HEAD
             @Override
             public void onVisibilityChanged(boolean isVisible) {
                 mCentralSurfaces.setBouncerShowingOverDream(
                         isVisible && mDreamOverlayStateController.isOverlayActive());
+=======
+        @Override
+        public void onVisibilityChanged(boolean isVisible) {
+            mBouncerVisible = isVisible;
+            mCentralSurfaces
+                    .setBouncerShowingOverDream(
+                            isVisible && mDreamOverlayStateController.isOverlayActive());
+>>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
 
                 if (!isVisible) {
                     mCentralSurfaces.setPrimaryBouncerHiddenFraction(
@@ -271,6 +305,8 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     @Nullable private KeyguardBypassController mBypassController;
     @Nullable private AlternateBouncer mAlternateBouncer;
 
+    private Handler mHandler;
+
     private final KeyguardUpdateMonitorCallback mUpdateMonitorCallback =
             new KeyguardUpdateMonitorCallback() {
         @Override
@@ -304,9 +340,16 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
             LatencyTracker latencyTracker,
             KeyguardSecurityModel keyguardSecurityModel,
             FeatureFlags featureFlags,
+<<<<<<< HEAD
             PrimaryBouncerCallbackInteractor primaryBouncerCallbackInteractor,
             PrimaryBouncerInteractor primaryBouncerInteractor,
             BouncerView primaryBouncerView) {
+=======
+            BouncerCallbackInteractor bouncerCallbackInteractor,
+            BouncerInteractor bouncerInteractor,
+            BouncerView bouncerView,
+            @Main Handler handler) {
+>>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
         mContext = context;
         mViewMediatorCallback = callback;
         mLockPatternUtils = lockPatternUtils;
@@ -330,7 +373,11 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         mFoldAodAnimationController = sysUIUnfoldComponent
                 .map(SysUIUnfoldComponent::getFoldAodAnimationController).orElse(null);
         mIsModernBouncerEnabled = featureFlags.isEnabled(Flags.MODERN_BOUNCER);
+<<<<<<< HEAD
         mIsUnoccludeTransitionFlagEnabled = featureFlags.isEnabled(Flags.UNOCCLUSION_TRANSITION);
+=======
+        mHandler = handler;
+>>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
     }
 
     @Override
@@ -688,6 +735,11 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
             }
         }
         updateStates();
+        mHandler.postDelayed(() -> {
+            if (mBouncerVisible) {
+                mKeyguardUpdateManager.updateFaceListeningStateForBehavior(mBouncerVisible);
+            }
+        }, 100);
     }
 
     private boolean isWakeAndUnlocking() {

@@ -129,4 +129,8 @@
   <java-symbol type="style" name="GlobalActionsAnimationXylon" />
   <java-symbol type="style" name="GlobalActionsAnimationCard" />
 
+
+  <!-- Enable face auth only when swiping security view -->
+  <java-symbol type="bool" name="config_faceAuthOnlyOnSecurityView" />
+
 </resources>
