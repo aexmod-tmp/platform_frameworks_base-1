@@ -65,7 +65,8 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
 
     private static final int BATTERY_STYLE_PORTRAIT = 0;
     private static final int BATTERY_STYLE_CIRCLE = 1;
-    private static final int BATTERY_STYLE_TEXT = 2;
+    private static final int BATTERY_STYLE_DOTTED_CIRCLE = 2;
+    private static final int BATTERY_STYLE_TEXT = 3;
 
     @Retention(SOURCE)
     @IntDef({MODE_DEFAULT, MODE_ON, MODE_OFF, MODE_ESTIMATE})
@@ -377,6 +378,12 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
             case BATTERY_STYLE_CIRCLE:
                 mBatteryIconView.setImageDrawable(isUnknown ? getUnknownStateDrawable(): mCircleDrawable);
                 mBatteryIconView.setVisibility(View.VISIBLE);
+                scaleBatteryMeterViews();
+                break;
+            case BATTERY_STYLE_DOTTED_CIRCLE:
+                mBatteryIconView.setImageDrawable(isUnknown ? getUnknownStateDrawable(): mCircleDrawable);
+                mBatteryIconView.setVisibility(View.VISIBLE);
+                mCircleDrawable.setMeterStyle(mBatteryStyle);
                 scaleBatteryMeterViews();
                 break;
             case BATTERY_STYLE_TEXT:
