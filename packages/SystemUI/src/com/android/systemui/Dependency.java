@@ -56,6 +56,7 @@ import com.android.systemui.navigationbar.NavigationBarController;
 import com.android.systemui.navigationbar.NavigationBarOverlayController;
 import com.android.systemui.navigationbar.NavigationModeController;
 import com.android.systemui.navigationbar.gestural.EdgeBackGestureHandler;
+import com.android.systemui.syberia.SyberiaSettingsService;
 import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.plugins.DarkIconDispatcher;
 import com.android.systemui.plugins.PluginDependencyProvider;
@@ -366,6 +367,7 @@ public class Dependency {
     @Inject Lazy<FeatureFlags> mFeatureFlagsLazy;
     @Inject Lazy<StatusBarContentInsetsProvider> mContentInsetsProviderLazy;
     @Inject Lazy<TaskHelper> mTaskHelper;
+    @Inject Lazy<SyberiaSettingsService> mSyberiaSettingsService;
 
     @Inject
     public Dependency() {
@@ -571,6 +573,7 @@ public class Dependency {
         mProviders.put(AutoHideController.class, mAutoHideController::get);
 
         mProviders.put(RecordingController.class, mRecordingController::get);
+        mProviders.put(SyberiaSettingsService.class, mSyberiaSettingsService::get);
 
         mProviders.put(MediaOutputDialogFactory.class, mMediaOutputDialogFactory::get);
 
