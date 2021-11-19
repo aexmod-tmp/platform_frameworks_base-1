@@ -53,9 +53,6 @@ import com.android.systemui.statusbar.policy.WalletControllerImpl;
 import com.android.systemui.statusbar.policy.ZenModeController;
 import com.android.systemui.statusbar.policy.ZenModeControllerImpl;
 
-import com.android.systemui.syberia.SyberiaSettingsService;
-import com.android.systemui.syberia.SyberiaSettingsServiceImpl;
-
 import java.util.concurrent.Executor;
 
 import dagger.Binds;
@@ -131,11 +128,6 @@ public interface StatusBarPolicyModule {
     @Binds
     NetworkController.AccessPointController provideAccessPointController(
             AccessPointControllerImpl accessPointControllerImpl);
-
-    /** */
-    @Binds
-    public abstract SyberiaSettingsService provideSyberiaSettingsService(
-            SyberiaSettingsServiceImpl controllerImpl);
 
     /** */
     @SysUISingleton
