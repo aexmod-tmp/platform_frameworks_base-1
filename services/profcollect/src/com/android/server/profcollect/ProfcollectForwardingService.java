@@ -96,12 +96,10 @@ public final class ProfcollectForwardingService extends SystemService {
             if (mIProfcollect == null) {
                 return;
             }
-            BackgroundThread.get().getThreadHandler().post(() -> {
-                if (serviceHasSupportedTraceProvider()) {
-                    registerObservers();
-                    ProfcollectBGJobService.schedule(getContext());
-                }
-            });
+            if (serviceHasSupportedTraceProvider()) {
+                registerObservers();
+            }
+            ProfcollectBGJobService.schedule(getContext());
         }
     }
 
