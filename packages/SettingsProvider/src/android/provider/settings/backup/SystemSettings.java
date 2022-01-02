@@ -110,5 +110,6 @@ public class SystemSettings {
         Settings.System.GAMING_MODE_APP_LIST,
         Settings.System.GAMING_MODE_DISABLE_NOTIFICATION_ALERT,
         Settings.System.GAMING_MODE_DISABLE_ADB,
+        Settings.System.LOCKSCREEN_SMALL_CLOCK,
     };
 }
