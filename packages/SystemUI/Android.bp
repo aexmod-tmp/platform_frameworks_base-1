@@ -132,6 +132,7 @@ android_library {
         "smartspace-google",
         "tensorflowlite_java",
         "vendor-pixelatoms-java",
+        "faceunlock_framework",
     ],
     manifest: "AndroidManifest.xml",
 
