@@ -82,6 +82,7 @@ import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.unfold.FoldAodAnimationController;
 import com.android.systemui.unfold.SysUIUnfoldComponent;
+import com.android.systemui.R;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -134,7 +135,6 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     @Nullable
     private final FoldAodAnimationController mFoldAodAnimationController;
     private KeyguardMessageAreaController<AuthKeyguardMessageArea> mKeyguardMessageAreaController;
-<<<<<<< HEAD
     private final PrimaryBouncerCallbackInteractor mPrimaryBouncerCallbackInteractor;
     private final PrimaryBouncerInteractor mPrimaryBouncerInteractor;
     private final BouncerView mPrimaryBouncerView;
@@ -152,29 +152,8 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
             public void onFullyShown() {
                 mPrimaryBouncerAnimating = false;
                 updateStates();
+                showFaceRecognizingMessage();
             }
-=======
-    private final BouncerCallbackInteractor mBouncerCallbackInteractor;
-    private final BouncerInteractor mBouncerInteractor;
-    private final BouncerViewDelegate mBouncerViewDelegate;
-    private final Lazy<com.android.systemui.shade.ShadeController> mShadeController;
-
-    private boolean mBouncerVisible = false;
-    private final BouncerExpansionCallback mExpansionCallback = new BouncerExpansionCallback() {
-        private boolean mBouncerAnimating;
-
-        @Override
-        public void onFullyShown() {
-            mBouncerAnimating = false;
-            updateStates();
-        }
-
-        @Override
-        public void onStartingToHide() {
-            mBouncerAnimating = true;
-            updateStates();
-        }
->>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
 
             @Override
             public void onStartingToHide() {
@@ -201,19 +180,10 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
                 }
             }
 
-<<<<<<< HEAD
             @Override
             public void onVisibilityChanged(boolean isVisible) {
                 mCentralSurfaces.setBouncerShowingOverDream(
                         isVisible && mDreamOverlayStateController.isOverlayActive());
-=======
-        @Override
-        public void onVisibilityChanged(boolean isVisible) {
-            mBouncerVisible = isVisible;
-            mCentralSurfaces
-                    .setBouncerShowingOverDream(
-                            isVisible && mDreamOverlayStateController.isOverlayActive());
->>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
 
                 if (!isVisible) {
                     mCentralSurfaces.setPrimaryBouncerHiddenFraction(
@@ -306,6 +276,8 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     @Nullable private AlternateBouncer mAlternateBouncer;
 
     private Handler mHandler;
+    private Handler mFaceRecognizingHandler;
+    private boolean mFaceRecognitionRunning = false;
 
     private final KeyguardUpdateMonitorCallback mUpdateMonitorCallback =
             new KeyguardUpdateMonitorCallback() {
@@ -315,6 +287,22 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
             // the bouncer goes away.
             if (mKeyguardStateController.isOccluded()) {
                 reset(true /* hideBouncerWhenShowing */);
+            }
+        }
+
+        @Override
+        public void onBiometricRunningStateChanged(boolean running,
+                BiometricSourceType biometricSourceType) {
+            if (biometricSourceType == BiometricSourceType.FACE &&
+                    mKeyguardUpdateManager.isUnlockWithFacePossible(
+                        mKeyguardUpdateManager.getCurrentUser())){
+                mFaceRecognitionRunning = running;
+                if (!mFaceRecognitionRunning){
+                    mFaceRecognizingHandler.removeCallbacksAndMessages(null);
+                } else {
+                    mFaceRecognizingHandler.postDelayed(() ->
+                                 showFaceRecognizingMessage(), 100);
+                }
             }
         }
     };
@@ -340,17 +328,14 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
             LatencyTracker latencyTracker,
             KeyguardSecurityModel keyguardSecurityModel,
             FeatureFlags featureFlags,
-<<<<<<< HEAD
             PrimaryBouncerCallbackInteractor primaryBouncerCallbackInteractor,
             PrimaryBouncerInteractor primaryBouncerInteractor,
-            BouncerView primaryBouncerView) {
-=======
-            BouncerCallbackInteractor bouncerCallbackInteractor,
-            BouncerInteractor bouncerInteractor,
-            BouncerView bouncerView,
-            @Main Handler handler) {
->>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
+            BouncerView primaryBouncerView,
+            @Main Handler handler,
+            @Main Handler faceRecognizingHandler) {
         mContext = context;
+        mHandler = handler;
+        mFaceRecognizingHandler = faceRecognizingHandler;
         mViewMediatorCallback = callback;
         mLockPatternUtils = lockPatternUtils;
         mConfigurationController = configurationController;
@@ -373,11 +358,7 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         mFoldAodAnimationController = sysUIUnfoldComponent
                 .map(SysUIUnfoldComponent::getFoldAodAnimationController).orElse(null);
         mIsModernBouncerEnabled = featureFlags.isEnabled(Flags.MODERN_BOUNCER);
-<<<<<<< HEAD
         mIsUnoccludeTransitionFlagEnabled = featureFlags.isEnabled(Flags.UNOCCLUSION_TRANSITION);
-=======
-        mHandler = handler;
->>>>>>> d29e51132ee2... [1/2] Allow changing face unlock method when locked
     }
 
     @Override
@@ -1394,6 +1375,13 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         if (mAlternateBouncer != null && isShowingAlternateBouncer()) {
             hideAlternateBouncer(false);
             executeAfterKeyguardGoneAction();
+        }
+    }
+
+    private void showFaceRecognizingMessage(){
+        if (mFaceRecognitionRunning &&
+                mKeyguardUpdateManager.isUnlockWithFacePossible(mKeyguardUpdateManager.getCurrentUser())) {
+            showBouncerMessage(mContext.getString(R.string.face_unlock_recognizing), null);
         }
     }
 
