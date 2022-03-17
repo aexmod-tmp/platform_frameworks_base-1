@@ -22,6 +22,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.PointF
 import android.hardware.biometrics.BiometricSourceType
+import android.provider.Settings
 import android.util.DisplayMetrics
 import android.util.Log
 import androidx.annotation.VisibleForTesting
