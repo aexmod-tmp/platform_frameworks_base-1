@@ -53,7 +53,7 @@ public class SyberiaKeyguardSliceProvider extends KeyguardSliceProvider implemen
     @Override // com.android.systemui.keyguard.KeyguardSliceProvider, androidx.slice.SliceProvider
     public Slice onBindSlice(Uri uri) {
         IconCompat iconCompat;
-        Trace.beginSection("YaapKeyguardSliceProvider#onBindSlice");
+        Trace.beginSection("SyberiaKeyguardSliceProvider#onBindSlice");
         ListBuilder listBuilder = new ListBuilder(getContext(), this.mSliceUri, -1);
         synchronized (this) {
             SmartSpaceCard currentCard = this.mSmartSpaceData.getCurrentCard();
@@ -181,13 +181,13 @@ public class SyberiaKeyguardSliceProvider extends KeyguardSliceProvider implemen
 
     private static class AddShadowTask extends AsyncTask<Bitmap, Void, Bitmap> {
         private final float mBlurRadius;
-        private final WeakReference<YaapKeyguardSliceProvider> mProviderReference;
+        private final WeakReference<SyberiaKeyguardSliceProvider> mProviderReference;
         private final SmartSpaceCard mWeatherCard;
 
-        AddShadowTask(YaapKeyguardSliceProvider yaapKeyguardSliceProvider, SmartSpaceCard smartSpaceCard) {
-            this.mProviderReference = new WeakReference<>(yaapKeyguardSliceProvider);
+        AddShadowTask(SyberiaKeyguardSliceProvider syberiaKeyguardSliceProvider, SmartSpaceCard smartSpaceCard) {
+            this.mProviderReference = new WeakReference<>(syberiaKeyguardSliceProvider);
             this.mWeatherCard = smartSpaceCard;
-            this.mBlurRadius = yaapKeyguardSliceProvider.getContext().getResources().getDimension(R.dimen.smartspace_icon_shadow);
+            this.mBlurRadius = syberiaKeyguardSliceProvider.getContext().getResources().getDimension(R.dimen.smartspace_icon_shadow);
         }
 
         public Bitmap doInBackground(Bitmap... bitmapArr) {
@@ -195,13 +195,13 @@ public class SyberiaKeyguardSliceProvider extends KeyguardSliceProvider implemen
         }
 
         public void onPostExecute(Bitmap bitmap) {
-            YaapKeyguardSliceProvider yaapKeyguardSliceProvider;
+            SyberiaKeyguardSliceProvider syberiaKeyguardSliceProvider;
             synchronized (this) {
                 this.mWeatherCard.setIcon(bitmap);
-                yaapKeyguardSliceProvider = this.mProviderReference.get();
+                syberiaKeyguardSliceProvider = this.mProviderReference.get();
             }
-            if (yaapKeyguardSliceProvider != null) {
-                yaapKeyguardSliceProvider.notifyChange();
+            if (syberiaKeyguardSliceProvider != null) {
+                syberiaKeyguardSliceProvider.notifyChange();
             }
         }
 
