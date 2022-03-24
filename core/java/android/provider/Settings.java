@@ -6036,12 +6036,6 @@ public final class Settings {
         public static final String INCREASING_RING_RAMP_UP_TIME = "increasing_ring_ramp_up_time";
 
         /**
-         * Whether to force small clock on keyguard
-         * @hide
-         */
-        public static final String LOCKSCREEN_SMALL_CLOCK = "lockscreen_small_clock";
-
-        /**
          * Whether to enable the ripple animation on fingerprint unlock
          * @hide
          */
