@@ -83,13 +83,42 @@ class SyberiaThemeOverlayController @Inject constructor(
     dumpManager,
     featureFlags,
     wakefulnessLifecycle,
-) {
-    private val cond: Zcam.ViewingConditions
-    private val targets: MaterialYouTargets
+), Tunable {
+    private lateinit var cond: Zcam.ViewingConditions
+    private lateinit var targets: MaterialYouTargets
 
-    private val colorOverride = Settings.Secure.getString(mContext.contentResolver, PREF_COLOR_OVERRIDE)
-    private val chromaFactor = Settings.Secure.getFloat(mContext.contentResolver, PREF_CHROMA_FACTOR, 1.0f).toDouble()
-    private val accurateShades = Settings.Secure.getInt(mContext.contentResolver, PREF_ACCURATE_SHADES, 1) != 0
+    private var colorOverride: Int = 0
+    private var chromaFactor: Double = Double.MIN_VALUE
+    private var accurateShades: Boolean = true
+    private var whiteLuminance: Double = Double.MIN_VALUE
+    private var linearLightness: Boolean = false
+    private var customColor: Boolean = false
+
+    override fun start() {
+        tunerService.addTunable(this, PREF_COLOR_OVERRIDE, PREF_WHITE_LUMINANCE,
+                PREF_CHROMA_FACTOR, PREF_ACCURATE_SHADES, PREF_LINEAR_LIGHTNESS, PREF_CUSTOM_COLOR)
+        super.start()
+    }
+
+    override fun onTuningChanged(key: String?, newValue: String?) {
+        key?.let {
+            if (it.contains(PREF_PREFIX)) {
+                customColor = Settings.Secure.getInt(mContext.contentResolver, PREF_CUSTOM_COLOR, 0) == 1
+                colorOverride = Settings.Secure.getInt(mContext.contentResolver,
+                        PREF_COLOR_OVERRIDE, -1)
+                chromaFactor = (Settings.Secure.getFloat(mContext.contentResolver,
+                        PREF_CHROMA_FACTOR, 100.0f) / 100f).toDouble()
+                accurateShades = Settings.Secure.getInt(mContext.contentResolver, PREF_ACCURATE_SHADES, 1) != 0
+                whiteLuminance = parseWhiteLuminanceUser(
+                    Settings.Secure.getInt(mContext.contentResolver,
+                            PREF_WHITE_LUMINANCE, WHITE_LUMINANCE_USER_DEFAULT)
+                )
+                linearLightness = Settings.Secure.getInt(mContext.contentResolver,
+                        PREF_LINEAR_LIGHTNESS, 0) != 0
+                reevaluateSystemTheme(true /* forceReload */)
+            }
+        }
+    }
 
     init {
         val whiteLuminance = parseWhiteLuminanceUser(
