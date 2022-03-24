@@ -17,7 +17,6 @@ import com.google.android.systemui.smartspace.KeyguardZenAlarmViewController;
 import com.google.android.systemui.smartspace.SmartSpaceController;
 
 import com.syberia.android.systemui.smartspace.KeyguardSmartspaceController;
-import com.syberia.android.systemui.theme.SyberiaThemeOverlayController;
 
 import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.KeyguardViewController;
@@ -70,7 +69,6 @@ import com.android.systemui.statusbar.policy.NextAlarmController;
 import com.android.systemui.statusbar.policy.SensorPrivacyController;
 import com.android.systemui.statusbar.policy.SensorPrivacyControllerImpl;
 import com.android.systemui.statusbar.policy.ZenModeController;
-import com.android.systemui.theme.ThemeOverlayController;
 import com.android.systemui.util.concurrency.DelayableExecutor;
 import com.android.systemui.volume.dagger.VolumeModule;
 
@@ -206,9 +204,6 @@ public abstract class SyberiaSystemUIModule {
 
     @Binds
     abstract DozeHost provideDozeHost(DozeServiceHost dozeServiceHost);
-
-    @Binds
-    abstract ThemeOverlayController provideThemeOverlayController(SyberiaThemeOverlayController themeOverlayController);
 
     // Google
     @Provides
