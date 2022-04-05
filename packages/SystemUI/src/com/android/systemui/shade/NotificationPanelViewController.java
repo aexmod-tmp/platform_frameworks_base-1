@@ -305,6 +305,11 @@ public final class NotificationPanelViewController implements Dumpable {
     public static final String COUNTER_PANEL_OPEN_QS = "panel_open_qs";
     private static final String COUNTER_PANEL_OPEN_PEEK = "panel_open_peek";
 
+    private static final String RETICKER_STATUS =
+            "system:" + Settings.System.RETICKER_STATUS;
+    private static final String RETICKER_COLORED =
+            "system:" + Settings.System.RETICKER_COLORED;
+
     private static final String DOUBLE_TAP_SLEEP_GESTURE =
             "system:" + Settings.System.DOUBLE_TAP_SLEEP_GESTURE;
     private static final String DOUBLE_TAP_SLEEP_LOCKSCREEN =
@@ -574,6 +579,8 @@ public final class NotificationPanelViewController implements Dumpable {
     private ImageView mReTickerComebackIcon;
     private TextView mReTickerContentTV;
     private NotificationStackScrollLayout mNotificationStackScroller;
+    private boolean mReTickerStatus;
+    private boolean mReTickerColored;
 
     private final KeyguardBottomAreaViewModel mKeyguardBottomAreaViewModel;
     private final KeyguardBottomAreaInteractor mKeyguardBottomAreaInteractor;
@@ -4544,6 +4551,8 @@ public final class NotificationPanelViewController implements Dumpable {
             mConfigurationController.addCallback(mConfigurationListener);
             mTunerService.addTunable(this, DOUBLE_TAP_SLEEP_GESTURE);
             mTunerService.addTunable(this, DOUBLE_TAP_SLEEP_LOCKSCREEN);
+            mTunerService.addTunable(this, RETICKER_STATUS);
+            mTunerService.addTunable(this, RETICKER_COLORED);
             // Theme might have changed between inflating this view and attaching it to the
             // window, so
             // force a call to onThemeChanged
@@ -4574,6 +4583,14 @@ public final class NotificationPanelViewController implements Dumpable {
                 case DOUBLE_TAP_SLEEP_LOCKSCREEN:
                     mIsLockscreenDoubleTapEnabled =
                             TunerService.parseIntegerSwitch(newValue, true);
+                    break;
+                case RETICKER_STATUS:
+                    mReTickerStatus =
+                            TunerService.parseIntegerSwitch(newValue, false);
+                    break;
+                case RETICKER_COLORED:
+                    mReTickerColored =
+                            TunerService.parseIntegerSwitch(newValue, false);
                     break;
                 default:
                     break;
@@ -5222,9 +5239,7 @@ public final class NotificationPanelViewController implements Dumpable {
 
     /* reTicker */
     public void reTickerView(boolean visibility) {
-        boolean reTickerStatus = Settings.System.getIntForUser(mView.getContext().getContentResolver(),
-                Settings.System.RETICKER_STATUS, 0, UserHandle.USER_CURRENT) != 0;
-        if (!reTickerStatus) return;
+        if (!mReTickerStatus) return;
         if (visibility && mReTickerComeback.getVisibility() == View.VISIBLE) {
             reTickerDismissal();
         }
@@ -5251,9 +5266,7 @@ public final class NotificationPanelViewController implements Dumpable {
             String mergedContentText = reTickerAppName + " " + reTickerContent;
             mReTickerComebackIcon.setImageDrawable(icon);
             Drawable dw = mView.getContext().getDrawable(R.drawable.reticker_background);
-            boolean reTickerColored = Settings.System.getIntForUser(mView.getContext().getContentResolver(),
-                    Settings.System.RETICKER_COLORED, 0, UserHandle.USER_CURRENT) != 0;
-            if (reTickerColored) {
+            if (mReTickerColored) {
                 int col;
                 col = row.getEntry().getSbn().getNotification().color;
                 mAppExceptions = mView.getContext().getResources().getStringArray(R.array.app_exceptions);
@@ -5289,9 +5302,7 @@ public final class NotificationPanelViewController implements Dumpable {
     }
 
     protected void reTickerViewVisibility() {
-        boolean reTickerStatus = Settings.System.getIntForUser(mView.getContext().getContentResolver(),
-                Settings.System.RETICKER_STATUS, 0, UserHandle.USER_CURRENT) != 0;
-        if (!reTickerStatus) {
+        if (!mReTickerStatus) {
             reTickerDismissal();
             return;
         }
