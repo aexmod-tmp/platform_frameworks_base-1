@@ -34,7 +34,7 @@ import java.util.Map;
 public class PropImitationHooks {
 
     private static final String TAG = "PropImitationHooks";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static final String sCertifiedFp =
             Resources.getSystem().getString(R.string.config_certifiedFingerprint);
@@ -47,7 +47,6 @@ public class PropImitationHooks {
     private static final String PACKAGE_ARCORE = "com.google.ar.core";
     private static final String PACKAGE_FINSKY = "com.android.vending";
     private static final String PACKAGE_GMS = "com.google.android.gms";
-    private static final String PROCESS_GMS_PERSISTENT = PACKAGE_GMS + ".persistent";
     private static final String PROCESS_GMS_UNSTABLE = PACKAGE_GMS + ".unstable";
 
     private static final String PACKAGE_GPHOTOS = "com.google.android.apps.photos";
@@ -71,18 +70,40 @@ public class PropImitationHooks {
         "PIXEL_2021_MIDYEAR_EXPERIENCE"
     };
 
-    private static final String PACKAGE_ASI = "com.google.android.as";
-    private static final String PACKAGE_VELVET = "com.google.android.googlequicksearchbox";
-    private static final String PACKAGE_WALLPAPERS = "com.google.android.apps.wallpaper";
-    private static final Map<String, Object> sP6Props = new HashMap<>();
+    private static final Map<String, Object> sP5Props = new HashMap<>();
+    private static final Map<String, Object> sP7ProProps = new HashMap<>();
+
+    private static final String[] toP5Props = {
+         "com.google.android.as",
+         "com.google.android.googlequicksearchbox",
+         "com.google.android.gms",
+         "com.google.android.gms.persistent"
+    };
+
+    private static final String[] toP7ProProps = {
+         "com.google.android.inputmethod.latin",
+         "com.google.android.apps.wallpaper",
+         "com.android.chrome"
+    };
+
     static {
-        sP6Props.put("BRAND", "google");
-        sP6Props.put("MANUFACTURER", "Google");
-        sP6Props.put("DEVICE", "redfin");
-        sP6Props.put("PRODUCT", "redfin");
-        sP6Props.put("MODEL", "Pixel 5");
-        sP6Props.put("FINGERPRINT", "google/redfin/redfin:13/TP1A.221105.002/9080065:user/release-keys");
+        sP5Props.put("BRAND", "google");
+        sP5Props.put("MANUFACTURER", "Google");
+        sP5Props.put("DEVICE", "redfin");
+        sP5Props.put("PRODUCT", "redfin");
+        sP5Props.put("MODEL", "Pixel 5");
+        sP5Props.put("FINGERPRINT", "google/redfin/redfin:13/TQ1A.221205.011/9244662:user/release-keys");
     }
+
+    static {
+        sP7ProProps.put("BRAND", "google");
+        sP7ProProps.put("MANUFACTURER", "Google");
+        sP7ProProps.put("DEVICE", "cheetah");
+        sP7ProProps.put("PRODUCT", "cheetah");
+        sP7ProProps.put("MODEL", "Pixel 7 Pro");
+        sP7ProProps.put("FINGERPRINT", "google/cheetah/cheetah:13/TQ1A.221205.011/9244662:user/release-keys");
+    }
+
 
     private static final boolean sSpoofGapps =
             Resources.getSystem().getBoolean(R.bool.config_spoofGoogleApps);
@@ -113,13 +134,14 @@ public class PropImitationHooks {
         } else if (sIsPhotos) {
             dlog("Spoofing Pixel XL for Google Photos");
             sP1Props.forEach((k, v) -> setPropValue(k, v));
-        } else if (sSpoofGapps && (packageName.equals(PACKAGE_VELVET)
-                || packageName.equals(PACKAGE_WALLPAPERS)
-                || packageName.equals(PACKAGE_ASI)
-                || (packageName.equals(PACKAGE_GMS)
-                    && processName.equals(PROCESS_GMS_PERSISTENT)))) {
+        } else if (sSpoofGapps &&
+                    Arrays.asList(toP5Props).contains(packageName)) {
             dlog("Spoofing Pixel 5 for: " + packageName + " process: " + processName);
-            sP6Props.forEach((k, v) -> setPropValue(k, v));
+            sP5Props.forEach((k, v) -> setPropValue(k, v));
+        } else if (sSpoofGapps &&
+                    Arrays.asList(toP7ProProps).contains(packageName)) {
+            dlog("Spoofing Pixel 7 Pro for: " + packageName + " process: " + processName);
+            sP7ProProps.forEach((k, v) -> setPropValue(k, v));
         }
     }
 
