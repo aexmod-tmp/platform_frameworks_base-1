@@ -1412,6 +1412,16 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         }
     }
 
+    public void showBouncerMessage(String message, ColorStateList colorState) {
+        if (isShowingAlternateAuth()) {
+            if (mKeyguardMessageAreaController != null) {
+                mKeyguardMessageAreaController.setMessage(message);
+            }
+        } else {
+            mBouncer.showMessage(message, colorState);
+        }
+    }
+
     @Override
     public ViewRootImpl getViewRootImpl() {
         ViewGroup viewGroup = mNotificationShadeWindowController.getNotificationShadeView();
