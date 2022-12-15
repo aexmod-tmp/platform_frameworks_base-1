@@ -184,18 +184,8 @@ public class UdfpsController implements DozeReceiver {
     private final SecureSettings mSecureSettings;
     private boolean mScreenOffFod;
 
-<<<<<<< HEAD
-=======
-    private boolean mDisableNightMode;
-    private boolean mNightModeActive;
-    private int mAutoModeState;
-
-    private boolean mFrameworkDimming;
-    private int[][] mBrightnessAlphaArray;
-
     private UdfpsAnimation mUdfpsAnimation;
 
->>>>>>> 5fb29991597d... Squashed patches for UDFPS customizations
     @VisibleForTesting
     public static final VibrationAttributes UDFPS_VIBRATION_ATTRIBUTES =
             new VibrationAttributes.Builder()

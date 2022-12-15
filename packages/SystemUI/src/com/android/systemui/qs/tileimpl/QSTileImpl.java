@@ -346,16 +346,11 @@ public abstract class QSTileImpl<TState extends State> implements QSTile, Lifecy
                         mStatusBarStateController.getState())));
         mUiEventLogger.logWithInstanceId(QSEvent.QS_ACTION_LONG_PRESS, 0, getMetricsSpec(),
                 getInstanceId());
-<<<<<<< HEAD
         final int eventId = mClickEventId++;
         mQSLogger.logTileLongClick(mTileSpec, mStatusBarStateController.getState(), mState.state,
                 eventId);
         mHandler.obtainMessage(H.LONG_CLICK, eventId, 0, view).sendToTarget();
-=======
-        mQSLogger.logTileLongClick(mTileSpec, mStatusBarStateController.getState(), mState.state);
-        mHandler.obtainMessage(H.LONG_CLICK, view).sendToTarget();
         vibrateTile(45);
->>>>>>> e77f28b0a886... QuickSettings: Add Haptic Feedback to tiles [1/2]
     }
 
     public LogMaker populate(LogMaker logMaker) {

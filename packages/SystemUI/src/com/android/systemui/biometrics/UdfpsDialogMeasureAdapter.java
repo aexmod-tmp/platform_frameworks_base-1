@@ -109,11 +109,7 @@ public class UdfpsDialogMeasureAdapter {
         final int displayHeight = getMaximumWindowBounds(windowMetrics).height();
         mBottomSpacerHeight = calculateBottomSpacerHeightForPortrait(
                 mSensorProps, displayHeight, textIndicatorHeight, buttonBarHeight,
-<<<<<<< HEAD
-                dialogMargin, navbarInsets.bottom, scaleFactor);
-=======
-                dialogMargin);
->>>>>>> e1f936669db2... Remove navbar inset for UDFPS BiometricPrompt
+                dialogMargin, scaleFactor);
 
         // Go through each of the children and do the custom measurement.
         int totalHeight = 0;
@@ -208,11 +204,7 @@ public class UdfpsDialogMeasureAdapter {
         final int displayWidth = getMaximumWindowBounds(windowMetrics).width();
         final int dialogMargin = getDialogMarginPx();
         final int horizontalSpacerWidth = calculateHorizontalSpacerWidthForLandscape(
-<<<<<<< HEAD
-                mSensorProps, displayWidth, dialogMargin, horizontalInset, scaleFactor);
-=======
-                mSensorProps, displayWidth, dialogMargin);
->>>>>>> e1f936669db2... Remove navbar inset for UDFPS BiometricPrompt
+                mSensorProps, displayWidth, dialogMargin, scaleFactor);
 
         final int sensorDiameter = getSensorDiameter(scaleFactor);
         final int remeasuredWidth = sensorDiameter + 2 * horizontalSpacerWidth;
@@ -288,12 +280,8 @@ public class UdfpsDialogMeasureAdapter {
     @VisibleForTesting
     static int calculateBottomSpacerHeightForPortrait(
             @NonNull FingerprintSensorPropertiesInternal sensorProperties, int displayHeightPx,
-<<<<<<< HEAD
             int textIndicatorHeightPx, int buttonBarHeightPx, int dialogMarginPx,
-            int navbarBottomInsetPx, float scaleFactor) {
-=======
-            int textIndicatorHeightPx, int buttonBarHeightPx, int dialogMarginPx) {
->>>>>>> e1f936669db2... Remove navbar inset for UDFPS BiometricPrompt
+            float scaleFactor) {
         final SensorLocationInternal location = sensorProperties.getLocation();
         final int sensorDistanceFromBottom = displayHeightPx
                 - (int) (scaleFactor * location.sensorLocationY)
@@ -308,13 +296,8 @@ public class UdfpsDialogMeasureAdapter {
             Log.d(TAG, "Display height: " + displayHeightPx
                     + ", Distance from bottom: " + sensorDistanceFromBottom
                     + ", Bottom margin: " + dialogMarginPx
-<<<<<<< HEAD
-                    + ", Navbar bottom inset: " + navbarBottomInsetPx
                     + ", Bottom spacer height (portrait): " + spacerHeight
                     + ", Scale Factor: " + scaleFactor);
-=======
-                    + ", Bottom spacer height (portrait): " + spacerHeight);
->>>>>>> e1f936669db2... Remove navbar inset for UDFPS BiometricPrompt
         }
 
         return spacerHeight;
