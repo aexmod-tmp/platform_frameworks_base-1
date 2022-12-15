@@ -192,6 +192,7 @@ public class KeyguardIndicationController {
     private double mChargingVoltage;
     private float mTemperature;
 
+    private String mMessageToShowOnScreenOn;
     private boolean mInited;
     private boolean mFaceDetectionRunning;
 

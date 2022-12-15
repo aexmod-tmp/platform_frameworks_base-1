@@ -46,6 +46,7 @@ import com.android.systemui.R;
 import com.android.systemui.shared.system.ActivityManagerWrapper;
 import com.android.systemui.shared.system.PackageManagerWrapper;
 import com.android.systemui.shared.system.TaskStackChangeListener;
+import com.android.systemui.shared.system.TaskStackChangeListeners;
 import com.android.systemui.statusbar.CommandQueue;
 
 import java.util.ArrayList;
@@ -172,7 +173,7 @@ public class TaskHelper implements CommandQueue.Callbacks, KeyguardStateControll
         mRecentsComponentName = ComponentName.unflattenFromString(context.getString(
                 com.android.internal.R.string.config_recentsComponentName));
         context.registerReceiver(mDefaultHomeBroadcastReceiver, homeFilter);
-        ActivityManagerWrapper.getInstance().registerTaskStackListener(mTaskStackChangeListener);
+        TaskStackChangeListeners.getInstance().registerTaskStackListener(mTaskStackChangeListener);
         Dependency.get(CommandQueue.class).addCallback(this);
         mKeyguardStateController = Dependency.get(KeyguardStateController.class);
         mKeyguardStateController.addCallback(this);
