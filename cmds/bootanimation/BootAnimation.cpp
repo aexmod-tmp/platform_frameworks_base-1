@@ -109,6 +109,93 @@ static const char DISPLAYS_PROP_NAME[] = "persist.service.bootanim.displays";
 static const char CLOCK_ENABLED_PROP_NAME[] = "persist.sys.bootanim.clock.enabled";
 static const int ANIM_ENTRY_NAME_MAX = ANIM_PATH_MAX + 1;
 static constexpr size_t TEXT_POS_LEN_MAX = 16;
+static const int DYNAMIC_COLOR_COUNT = 4;
+static const char U_TEXTURE[] = "uTexture";
+static const char U_FADE[] = "uFade";
+static const char U_CROP_AREA[] = "uCropArea";
+static const char U_START_COLOR_PREFIX[] = "uStartColor";
+static const char U_END_COLOR_PREFIX[] = "uEndColor";
+static const char U_COLOR_PROGRESS[] = "uColorProgress";
+static const char A_UV[] = "aUv";
+static const char A_POSITION[] = "aPosition";
+static const char VERTEX_SHADER_SOURCE[] = R"(
+    precision mediump float;
+    attribute vec4 aPosition;
+    attribute highp vec2 aUv;
+    varying highp vec2 vUv;
+    void main() {
+        gl_Position = aPosition;
+        vUv = aUv;
+    })";
+static const char IMAGE_FRAG_DYNAMIC_COLORING_SHADER_SOURCE[] = R"(
+    precision mediump float;
+    const float cWhiteMaskThreshold = 0.05;
+    uniform sampler2D uTexture;
+    uniform float uFade;
+    uniform float uColorProgress;
+    uniform vec3 uStartColor0;
+    uniform vec3 uStartColor1;
+    uniform vec3 uStartColor2;
+    uniform vec3 uStartColor3;
+    uniform vec3 uEndColor0;
+    uniform vec3 uEndColor1;
+    uniform vec3 uEndColor2;
+    uniform vec3 uEndColor3;
+    varying highp vec2 vUv;
+    void main() {
+        vec4 mask = texture2D(uTexture, vUv);
+        float r = mask.r;
+        float g = mask.g;
+        float b = mask.b;
+        float a = mask.a;
+        // If all channels have values, render pixel as a shade of white.
+        float useWhiteMask = step(cWhiteMaskThreshold, r)
+            * step(cWhiteMaskThreshold, g)
+            * step(cWhiteMaskThreshold, b)
+            * step(cWhiteMaskThreshold, a);
+        vec3 color = r * mix(uStartColor0, uEndColor0, uColorProgress)
+                + g * mix(uStartColor1, uEndColor1, uColorProgress)
+                + b * mix(uStartColor2, uEndColor2, uColorProgress)
+                + a * mix(uStartColor3, uEndColor3, uColorProgress);
+        color = mix(color, vec3((r + g + b + a) * 0.25), useWhiteMask);
+        gl_FragColor = vec4(color.x, color.y, color.z, (1.0 - uFade));
+    })";
+static const char IMAGE_FRAG_SHADER_SOURCE[] = R"(
+    precision mediump float;
+    uniform sampler2D uTexture;
+    uniform float uFade;
+    varying highp vec2 vUv;
+    void main() {
+        vec4 color = texture2D(uTexture, vUv);
+        gl_FragColor = vec4(color.x, color.y, color.z, (1.0 - uFade)) * color.a;
+    })";
+static const char TEXT_FRAG_SHADER_SOURCE[] = R"(
+    precision mediump float;
+    uniform sampler2D uTexture;
+    uniform vec4 uCropArea;
+    varying highp vec2 vUv;
+    void main() {
+        vec2 uv = vec2(mix(uCropArea.x, uCropArea.z, vUv.x),
+                       mix(uCropArea.y, uCropArea.w, vUv.y));
+        gl_FragColor = texture2D(uTexture, uv);
+    })";
+
+static GLfloat quadPositions[] = {
+    -0.5f, -0.5f,
+    +0.5f, -0.5f,
+    +0.5f, +0.5f,
+    +0.5f, +0.5f,
+    -0.5f, +0.5f,
+    -0.5f, -0.5f
+};
+static GLfloat quadUVs[] = {
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f
+};
 
 // ---------------------------------------------------------------------------
 
@@ -504,6 +591,15 @@ status_t BootAnimation::readyToRun() {
     mFlingerSurface = s;
     mTargetInset = -1;
 
+    // Rotate the boot animation according to the value specified in the sysprop
+    // ro.bootanim.set_orientation_<display_id>. Four values are supported: ORIENTATION_0,
+    // ORIENTATION_90, ORIENTATION_180 and ORIENTATION_270.
+    // If the value isn't specified or is ORIENTATION_0, nothing will be changed.
+    // This is needed to support having boot animation in orientations different from the natural
+    // device orientation. For example, on tablets that may want to keep natural orientation
+    // portrait for applications compatibility and to have the boot animation in landscape.
+    rotateAwayFromNaturalOrientationIfNeeded();
+
     projectSceneToWindow();
 
     // Register a display event receiver
@@ -515,6 +611,50 @@ status_t BootAnimation::readyToRun() {
             new DisplayEventCallback(this), nullptr);
 
     return NO_ERROR;
+}
+
+void BootAnimation::rotateAwayFromNaturalOrientationIfNeeded() {
+    const auto orientation = parseOrientationProperty();
+
+    if (orientation == ui::ROTATION_0) {
+        // Do nothing if the sysprop isn't set or is set to ROTATION_0.
+        return;
+    }
+
+    if (orientation == ui::ROTATION_90 || orientation == ui::ROTATION_270) {
+        std::swap(mWidth, mHeight);
+        std::swap(mInitWidth, mInitHeight);
+        mFlingerSurfaceControl->updateDefaultBufferSize(mWidth, mHeight);
+    }
+
+    Rect displayRect(0, 0, mWidth, mHeight);
+    Rect layerStackRect(0, 0, mWidth, mHeight);
+
+    SurfaceComposerClient::Transaction t;
+    t.setDisplayProjection(mDisplayToken, orientation, layerStackRect, displayRect);
+    t.apply();
+}
+
+ui::Rotation BootAnimation::parseOrientationProperty() {
+    const auto displayIds = SurfaceComposerClient::getPhysicalDisplayIds();
+    if (displayIds.size() == 0) {
+        return ui::ROTATION_0;
+    }
+    const auto displayId = displayIds[0];
+    const auto syspropName = [displayId] {
+        std::stringstream ss;
+        ss << "ro.bootanim.set_orientation_" << displayId.value;
+        return ss.str();
+    }();
+    const auto syspropValue = android::base::GetProperty(syspropName, "ORIENTATION_0");
+    if (syspropValue == "ORIENTATION_90") {
+        return ui::ROTATION_90;
+    } else if (syspropValue == "ORIENTATION_180") {
+        return ui::ROTATION_180;
+    } else if (syspropValue == "ORIENTATION_270") {
+        return ui::ROTATION_270;
+    }
+    return ui::ROTATION_0;
 }
 
 void BootAnimation::projectSceneToWindow() {
@@ -1235,6 +1375,60 @@ bool BootAnimation::shouldStopPlayingPart(const Animation::Part& part,
     // stop playing only if it is time to exit and it's a partial part which has been faded out
     return exitPending() && !part.playUntilComplete && fadedFramesCount >= part.framesToFadeCount &&
         (lastDisplayedProgress == 0 || lastDisplayedProgress == 100);
+}
+
+// Linear mapping from range <a1, a2> to range <b1, b2>
+float mapLinear(float x, float a1, float a2, float b1, float b2) {
+    return b1 + ( x - a1 ) * ( b2 - b1 ) / ( a2 - a1 );
+}
+
+void BootAnimation::drawTexturedQuad(float xStart, float yStart, float width, float height) {
+    // Map coordinates from screen space to world space.
+    float x0 = mapLinear(xStart, 0, mWidth, -1, 1);
+    float y0 = mapLinear(yStart, 0, mHeight, -1, 1);
+    float x1 = mapLinear(xStart + width, 0, mWidth, -1, 1);
+    float y1 = mapLinear(yStart + height, 0, mHeight, -1, 1);
+    // Update quad vertex positions.
+    quadPositions[0] = x0;
+    quadPositions[1] = y0;
+    quadPositions[2] = x1;
+    quadPositions[3] = y0;
+    quadPositions[4] = x1;
+    quadPositions[5] = y1;
+    quadPositions[6] = x1;
+    quadPositions[7] = y1;
+    quadPositions[8] = x0;
+    quadPositions[9] = y1;
+    quadPositions[10] = x0;
+    quadPositions[11] = y0;
+    glDrawArrays(GL_TRIANGLES, 0,
+        sizeof(quadPositions) / sizeof(quadPositions[0]) / 2);
+}
+
+void BootAnimation::initDynamicColors() {
+    for (int i = 0; i < DYNAMIC_COLOR_COUNT; i++) {
+        const auto syspropName = "persist.bootanim.color" + std::to_string(i + 1);
+        const auto syspropValue = android::base::GetProperty(syspropName, "");
+        if (syspropValue != "") {
+            SLOGI("Loaded dynamic color: %s -> %s", syspropName.c_str(), syspropValue.c_str());
+            mDynamicColorsApplied = true;
+        }
+        parseColorDecimalString(syspropValue,
+            mAnimation->endColors[i], mAnimation->startColors[i]);
+    }
+    glUseProgram(mImageShader);
+    SLOGI("Dynamically coloring boot animation. Sysprops loaded? %i", mDynamicColorsApplied);
+    for (int i = 0; i < DYNAMIC_COLOR_COUNT; i++) {
+        float *startColor = mAnimation->startColors[i];
+        float *endColor = mAnimation->endColors[i];
+        glUniform3f(glGetUniformLocation(mImageShader,
+            (U_START_COLOR_PREFIX + std::to_string(i)).c_str()),
+            startColor[0], startColor[1], startColor[2]);
+        glUniform3f(glGetUniformLocation(mImageShader,
+            (U_END_COLOR_PREFIX + std::to_string(i)).c_str()),
+            endColor[0], endColor[1], endColor[2]);
+    }
+    mImageColorProgressLocation = glGetUniformLocation(mImageShader, U_COLOR_PROGRESS);
 }
 
 bool BootAnimation::playAnimation(const Animation& animation) {

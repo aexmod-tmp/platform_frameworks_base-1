@@ -27,10 +27,9 @@ import com.android.systemui.dump.DumpManager;
 import com.android.systemui.keyguard.KeyguardSliceProvider;
 import com.android.systemui.media.muteawait.MediaMuteAwaitConnectionCli;
 import com.android.systemui.media.nearby.NearbyMediaDevicesManager;
-import com.android.systemui.media.taptotransfer.MediaTttCommandLineHelper;
-import com.android.systemui.media.taptotransfer.receiver.MediaTttChipControllerReceiver;
-import com.android.systemui.media.taptotransfer.sender.MediaTttChipControllerSender;
 import com.android.systemui.people.PeopleProvider;
+import com.android.systemui.statusbar.NotificationInsetsModule;
+import com.android.systemui.statusbar.QsFrameTranslateModule;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.unfold.FoldStateLogger;
 import com.android.systemui.unfold.FoldStateLoggingProvider;
@@ -42,7 +41,6 @@ import com.android.wm.shell.back.BackAnimation;
 import com.android.wm.shell.bubbles.Bubbles;
 import com.android.wm.shell.desktopmode.DesktopMode;
 import com.android.wm.shell.displayareahelper.DisplayAreaHelper;
-import com.android.wm.shell.floating.FloatingTasks;
 import com.android.wm.shell.onehanded.OneHanded;
 import com.android.wm.shell.pip.Pip;
 import com.android.wm.shell.recents.RecentTasks;
@@ -50,8 +48,6 @@ import com.android.wm.shell.splitscreen.SplitScreen;
 import com.android.wm.shell.startingsurface.StartingSurface;
 import com.android.wm.shell.sysui.ShellInterface;
 import com.android.wm.shell.transition.ShellTransitions;
-
-import com.google.android.systemui.smartspace.KeyguardSmartspaceController;
 
 import java.util.Map;
 import java.util.Optional;
@@ -62,12 +58,16 @@ import dagger.BindsInstance;
 import dagger.Subcomponent;
 
 /**
- * Dagger Subcomponent for Core SysUI.
+ * An example Dagger Subcomponent for Core SysUI.
+ *
+ * See {@link ReferenceSysUIComponent} for the one actually used by AOSP.
  */
 @SysUISingleton
 @Subcomponent(modules = {
         DefaultComponentBinder.class,
         DependencyProvider.class,
+        NotificationInsetsModule.class,
+        QsFrameTranslateModule.class,
         SystemUIBinder.class,
         SystemUIModule.class,
         SystemUICoreStartableModule.class,
@@ -114,9 +114,6 @@ public interface SysUIComponent {
         Builder setBackAnimation(Optional<BackAnimation> b);
 
         @BindsInstance
-        Builder setFloatingTasks(Optional<FloatingTasks> f);
-
-        @BindsInstance
         Builder setDesktopMode(Optional<DesktopMode> d);
 
         SysUIComponent build();
@@ -128,16 +125,13 @@ public interface SysUIComponent {
     default void init() {
         // Initialize components that have no direct tie to the dagger dependency graph,
         // but are critical to this component's operation
-        // TODO(b/205034537): I think this is a good idea?
         getSysUIUnfoldComponent().ifPresent(c -> {
             c.getUnfoldLightRevealOverlayAnimation().init();
             c.getUnfoldTransitionWallpaperController().init();
+            c.getUnfoldHapticsPlayer();
         });
         getNaturalRotationUnfoldProgressProvider().ifPresent(o -> o.init());
         // No init method needed, just needs to be gotten so that it's created.
-        getMediaTttChipControllerSender();
-        getMediaTttChipControllerReceiver();
-        getMediaTttCommandLineHelper();
         getMediaMuteAwaitConnectionCli();
         getNearbyMediaDevicesManager();
         getUnfoldLatencyTracker().init();
@@ -208,15 +202,6 @@ public interface SysUIComponent {
     Optional<NaturalRotationUnfoldProgressProvider> getNaturalRotationUnfoldProgressProvider();
 
     /** */
-    Optional<MediaTttChipControllerSender> getMediaTttChipControllerSender();
-
-    /** */
-    Optional<MediaTttChipControllerReceiver> getMediaTttChipControllerReceiver();
-
-    /** */
-    Optional<MediaTttCommandLineHelper> getMediaTttCommandLineHelper();
-
-    /** */
     Optional<MediaMuteAwaitConnectionCli> getMediaMuteAwaitConnectionCli();
 
     /** */
@@ -251,10 +236,4 @@ public interface SysUIComponent {
      * Member injection into the supplied argument.
      */
     void inject(PeopleProvider peopleProvider);
-
-    /**
-     * Creates a KeyguardSmartspaceController.
-     */
-    @SysUISingleton
-    KeyguardSmartspaceController createKeyguardSmartspaceController();
 }

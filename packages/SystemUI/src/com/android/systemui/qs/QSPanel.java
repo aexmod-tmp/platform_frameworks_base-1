@@ -59,6 +59,7 @@ import com.android.systemui.Dependency;
 import com.android.systemui.R;
 import com.android.systemui.plugins.qs.QSTile;
 import com.android.systemui.plugins.qs.QSTileView;
+import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.settings.brightness.BrightnessSliderController;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.tuner.TunerService.Tunable;
@@ -137,6 +138,7 @@ public class QSPanel extends LinearLayout implements Tunable {
     private ViewGroup mMediaHostView;
     private boolean mShouldMoveMediaOnExpansion = true;
     private boolean mUsingCombinedHeaders = false;
+    private QSLogger mQsLogger;
 
     public QSPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -158,7 +160,8 @@ public class QSPanel extends LinearLayout implements Tunable {
         mTop = tunerService.getValue(QS_BRIGHTNESS_SLIDER_POSITION, 0) == 0;
     }
 
-    void initialize() {
+    void initialize(QSLogger qsLogger) {
+        mQsLogger = qsLogger;
         mTileLayout = getOrCreateTileLayout();
 
         if (mUsingMediaPlayer) {
@@ -249,6 +252,7 @@ public class QSPanel extends LinearLayout implements Tunable {
         if (mTileLayout == null) {
             mTileLayout = (QSTileLayout) LayoutInflater.from(mContext)
                     .inflate(R.layout.qs_paged_tile_layout, this, false);
+            mTileLayout.setLogger(mQsLogger);
             mTileLayout.setSquishinessFraction(mSquishinessFraction);
         }
         return mTileLayout;
@@ -826,6 +830,8 @@ public class QSPanel extends LinearLayout implements Tunable {
          * Sets the expansion value and proposedTranslation to panel.
          */
         default void setExpansion(float expansion, float proposedTranslation) {}
+
+        default void setLogger(QSLogger qsLogger) { }
 
         int getNumVisibleTiles();
 

@@ -33,6 +33,7 @@ import android.view.animation.DecelerateInterpolator;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.graphics.ColorUtils;
+import com.android.systemui.statusbar.notification.stack.StackStateAnimator;
 
 /**
  * Drawable used on SysUI scrims.

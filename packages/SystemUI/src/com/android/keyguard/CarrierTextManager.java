@@ -295,7 +295,7 @@ public class CarrierTextManager {
     }
 
     protected List<SubscriptionInfo> getSubscriptionInfo() {
-        return mKeyguardUpdateMonitor.getFilteredSubscriptionInfo(false);
+        return mKeyguardUpdateMonitor.getFilteredSubscriptionInfo();
     }
 
     protected void updateCarrierText() {

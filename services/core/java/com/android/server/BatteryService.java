@@ -1474,6 +1474,13 @@ public final class BatteryService extends SystemService {
         }
 
         @Override
+        public int getBatteryHealth() {
+            synchronized (mLock) {
+                return mHealthInfo.batteryHealth;
+            }
+        }
+
+        @Override
         public boolean getBatteryLevelLow() {
             synchronized (mLock) {
                 return mBatteryLevelLow;
