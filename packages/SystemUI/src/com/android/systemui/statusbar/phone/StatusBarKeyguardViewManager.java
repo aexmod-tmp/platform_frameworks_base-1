@@ -144,6 +144,8 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     private float mFraction = -1f;
     private boolean mTracking = false;
 
+    private boolean mPrimaryBouncerVisible = false;
+
     private final PrimaryBouncerExpansionCallback mExpansionCallback =
             new PrimaryBouncerExpansionCallback() {
             private boolean mPrimaryBouncerAnimating;
@@ -182,6 +184,7 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
 
             @Override
             public void onVisibilityChanged(boolean isVisible) {
+                mPrimaryBouncerVisible = isVisible;
                 mCentralSurfaces.setBouncerShowingOverDream(
                         isVisible && mDreamOverlayStateController.isOverlayActive());
 
@@ -725,8 +728,8 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         }
         updateStates();
         mHandler.postDelayed(() -> {
-            if (mBouncerVisible) {
-                mKeyguardUpdateManager.updateFaceListeningStateForBehavior(mBouncerVisible);
+            if (mPrimaryBouncerVisible) {
+                mKeyguardUpdateManager.updateFaceListeningStateForBehavior(mPrimaryBouncerVisible);
             }
         }, 100);
     }
@@ -1413,12 +1416,12 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     }
 
     public void showBouncerMessage(String message, ColorStateList colorState) {
-        if (isShowingAlternateAuth()) {
+        if (isShowingAlternateBouncer()) {
             if (mKeyguardMessageAreaController != null) {
                 mKeyguardMessageAreaController.setMessage(message);
             }
         } else {
-            mBouncer.showMessage(message, colorState);
+            mPrimaryBouncer.showMessage(message, colorState);
         }
     }
 

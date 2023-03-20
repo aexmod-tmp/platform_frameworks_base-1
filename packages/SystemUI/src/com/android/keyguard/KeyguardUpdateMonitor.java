@@ -82,6 +82,7 @@ import android.app.trust.TrustManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.IPackageManager;
@@ -2871,7 +2872,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
                 && faceAndFpNotAuthenticated
                 && !mGoingToSleep;
 
-        if (shouldListen && mFaceUnlockBehavior == FACE_UNLOCK_BEHAVIOR_SWIPE && !mBouncerFullyShown){
+        if (shouldListen && mFaceUnlockBehavior == FACE_UNLOCK_BEHAVIOR_SWIPE && !mPrimaryBouncerFullyShown){
             shouldListen = false;
         }
 
@@ -3395,7 +3396,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
         mLogger.d("handleKeyguardReset");
         updateBiometricListeningState(BIOMETRIC_ACTION_UPDATE,
                 FACE_AUTH_UPDATED_KEYGUARD_RESET);
-        mBouncerFullyShown = false;
+        mPrimaryBouncerFullyShown = false;
         mNeedsSlowUnlockTransition = resolveNeedsSlowUnlockTransition();
     }
 
@@ -3469,8 +3470,8 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
     }
 
     public void updateFaceListeningStateForBehavior(boolean fullyShow) {
-        if (mBouncerFullyShown != fullyShow){
-            mBouncerFullyShown = fullyShow;
+        if (mPrimaryBouncerFullyShown != fullyShow){
+            mPrimaryBouncerFullyShown = fullyShow;
             if (mFaceUnlockBehavior == FACE_UNLOCK_BEHAVIOR_SWIPE){
                 updateFaceListeningState(BIOMETRIC_ACTION_UPDATE, FACE_AUTH_UPDATED_PRIMARY_BOUNCER_SHOWN);
             }
@@ -3507,7 +3508,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, Dumpab
      * Handle {@link #MSG_REPORT_EMERGENCY_CALL_ACTION}
      */
     private void handleReportEmergencyCallAction() {
-        mBouncerFullyShown = false;
+        mPrimaryBouncerFullyShown = false;
         Assert.isMainThread();
         for (int i = 0; i < mCallbacks.size(); i++) {
             KeyguardUpdateMonitorCallback cb = mCallbacks.get(i).get();
