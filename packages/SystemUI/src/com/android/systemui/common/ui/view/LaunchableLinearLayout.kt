@@ -28,6 +28,7 @@ class LaunchableLinearLayout : LinearLayout, LaunchableView {
         LaunchableViewDelegate(
             this,
             superSetVisibility = { super.setVisibility(it) },
+            superSetTransitionVisibility = { super.setTransitionVisibility(it) },
         )
 
     constructor(context: Context?) : super(context)
@@ -51,5 +52,9 @@ class LaunchableLinearLayout : LinearLayout, LaunchableView {
 
     override fun setVisibility(visibility: Int) {
         delegate.setVisibility(visibility)
+    }
+
+    override fun setTransitionVisibility(visibility: Int) {
+        delegate.setTransitionVisibility(visibility)
     }
 }
