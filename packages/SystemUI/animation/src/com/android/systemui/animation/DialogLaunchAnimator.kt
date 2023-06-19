@@ -298,16 +298,10 @@ constructor(
     ) {
         val view =
             openedDialogs.firstOrNull { it.dialog == animateFrom }?.dialogContentWithBackground
-        if (view == null) {
-            Log.w(
-                TAG,
-                "Showing dialog $dialog normally as the dialog it is shown from was not shown " +
-                    "using DialogLaunchAnimator"
-            )
-            dialog.show()
-            return
-        }
-
+                ?: throw IllegalStateException(
+                    "The animateFrom dialog was not animated using " +
+                        "DialogLaunchAnimator.showFrom(View|Dialog)"
+                )
         showFromView(
             dialog,
             view,
