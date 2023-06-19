@@ -17,7 +17,6 @@
 package com.android.systemui.shade
 
 import android.testing.AndroidTestingRunner
-import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.START
@@ -93,12 +92,12 @@ class CombinedShadeHeaderConstraintsTest : SysuiTestCase() {
             assertThat(getConstraint(R.id.clock).layout.horizontalBias).isEqualTo(0f)
 
             assertThat(getConstraint(R.id.date).layout.startToStart).isEqualTo(PARENT_ID)
-            assertThat(getConstraint(R.id.date).layout.horizontalBias).isEqualTo(0.5f)
+            assertThat(getConstraint(R.id.date).layout.horizontalBias).isEqualTo(0f)
 
             assertThat(getConstraint(R.id.batteryRemainingIcon).layout.endToEnd)
                 .isEqualTo(PARENT_ID)
             assertThat(getConstraint(R.id.batteryRemainingIcon).layout.horizontalBias)
-                .isEqualTo(0.5f)
+                .isEqualTo(1f)
 
             assertThat(getConstraint(R.id.privacy_container).layout.endToEnd)
                 .isEqualTo(R.id.end_guide)
@@ -332,8 +331,10 @@ class CombinedShadeHeaderConstraintsTest : SysuiTestCase() {
         val views = mapOf(
                 R.id.clock to "clock",
                 R.id.date to "date",
+                R.id.statusIcons to "icons",
                 R.id.privacy_container to "privacy",
                 R.id.carrier_group to "carriers",
+                R.id.batteryRemainingIcon to "battery",
         )
         views.forEach { (id, name) ->
             assertWithMessage("$name has 0 height in qqs")
@@ -351,8 +352,11 @@ class CombinedShadeHeaderConstraintsTest : SysuiTestCase() {
     fun testCheckViewsDontChangeSizeBetweenAnimationConstraints() {
         val views = mapOf(
                 R.id.clock to "clock",
+                R.id.date to "date",
+                R.id.statusIcons to "icons",
                 R.id.privacy_container to "privacy",
                 R.id.carrier_group to "carriers",
+                R.id.batteryRemainingIcon to "battery",
         )
         views.forEach { (id, name) ->
             expect.withMessage("$name changes height")
@@ -365,8 +369,8 @@ class CombinedShadeHeaderConstraintsTest : SysuiTestCase() {
     }
 
     private fun Int.fromConstraint() = when (this) {
-        ViewGroup.LayoutParams.MATCH_PARENT -> "MATCH_PARENT"
-        ViewGroup.LayoutParams.WRAP_CONTENT -> "WRAP_CONTENT"
+        -1 -> "MATCH_PARENT"
+        -2 -> "WRAP_CONTENT"
         else -> toString()
     }
 
