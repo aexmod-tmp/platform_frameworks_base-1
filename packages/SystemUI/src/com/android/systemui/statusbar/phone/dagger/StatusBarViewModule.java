@@ -32,7 +32,6 @@ import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.dump.DumpManager;
 import com.android.systemui.flags.FeatureFlags;
 import com.android.systemui.flags.Flags;
-import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.privacy.OngoingPrivacyChip;
 import com.android.systemui.settings.UserTracker;
@@ -228,8 +227,7 @@ public abstract class StatusBarViewModule {
             @Main Handler mainHandler,
             ContentResolver contentResolver,
             FeatureFlags featureFlags,
-            BatteryController batteryController,
-            ActivityStarter activityStarter
+            BatteryController batteryController
     ) {
         return new BatteryMeterViewController(
                 batteryMeterView,
@@ -239,8 +237,7 @@ public abstract class StatusBarViewModule {
                 mainHandler,
                 contentResolver,
                 featureFlags,
-                batteryController,
-                activityStarter);
+                batteryController);
 
     }
 
@@ -304,8 +301,7 @@ public abstract class StatusBarViewModule {
             OperatorNameViewController.Factory operatorNameViewControllerFactory,
             SecureSettings secureSettings,
             @Main Executor mainExecutor,
-            DumpManager dumpManager,
-            ActivityStarter activityStarter
+            DumpManager dumpManager
     ) {
         return new CollapsedStatusBarFragment(statusBarFragmentComponentFactory,
                 ongoingCallController,
@@ -327,8 +323,7 @@ public abstract class StatusBarViewModule {
                 operatorNameViewControllerFactory,
                 secureSettings,
                 mainExecutor,
-                dumpManager,
-                activityStarter);
+                dumpManager);
     }
 
     /**
