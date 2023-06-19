@@ -107,6 +107,7 @@ public class WorkModeTile extends SecureQSTile<BooleanState> implements
     @MainThread
     public void onManagedProfileRemoved() {
         mHost.removeTile(getTileSpec());
+        mHost.unmarkTileAsAutoAdded(getTileSpec());
     }
 
     @Override

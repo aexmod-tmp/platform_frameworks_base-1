@@ -428,6 +428,11 @@ public class QSTileHost implements QSHost, Tunable, PluginListener<QSFactory>, P
         mMainExecutor.execute(() -> changeTileSpecs(tileSpecs -> tileSpecs.removeAll(specs)));
     }
 
+    @Override
+    public void unmarkTileAsAutoAdded(String spec) {
+        if (mAutoTiles != null) mAutoTiles.unmarkTileAsAutoAdded(spec);
+    }
+
     /**
      * Add a tile to the end
      *
