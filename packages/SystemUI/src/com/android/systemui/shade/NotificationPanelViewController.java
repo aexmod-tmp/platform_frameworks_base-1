@@ -55,7 +55,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.Fragment;
 import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.StatusBarManager;
 import android.content.ContentResolver;
 import android.content.res.Resources;
@@ -63,11 +62,9 @@ import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.ContentObserver;
 import android.graphics.Color;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Insets;
 import android.graphics.Rect;
 import android.graphics.Region;
-import android.graphics.drawable.Drawable;
 import android.hardware.biometrics.SensorLocationInternal;
 import android.hardware.fingerprint.FingerprintSensorPropertiesInternal;
 import android.os.Bundle;
@@ -75,7 +72,6 @@ import android.os.Handler;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.Trace;
-import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.VibrationEffect;
 import android.provider.Settings;
@@ -102,17 +98,12 @@ import android.view.ViewGroup;
 import android.view.ViewPropertyAnimator;
 import android.view.ViewStub;
 import android.view.ViewTreeObserver;
-import android.view.ViewTreeObserver.InternalInsetsInfo;
-import android.view.ViewTreeObserver.OnComputeInternalInsetsListener;
 import android.view.WindowInsets;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.animation.Interpolator;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintSet;
 
@@ -138,7 +129,6 @@ import com.android.keyguard.dagger.KeyguardUserSwitcherComponent;
 import com.android.systemui.DejankUtils;
 import com.android.systemui.Dumpable;
 import com.android.systemui.R;
-import com.android.systemui.RetickerAnimations;
 import com.android.systemui.animation.ActivityLaunchAnimator;
 import com.android.systemui.animation.Interpolators;
 import com.android.systemui.animation.LaunchAnimator;
@@ -742,14 +732,6 @@ public final class NotificationPanelViewController implements Dumpable {
 
     private final String[] mAppExceptions;
 
-    /*Reticker*/
-    private LinearLayout mReTickerComeback;
-    private ImageView mReTickerComebackIcon;
-    private TextView mReTickerContentTV;
-    private NotificationStackScrollLayout mNotificationStackScroller;
-    private boolean mReTickerStatus;
-    private boolean mReTickerColored;
-
     /**
      * For PanelView fling perflock call
      */
@@ -759,12 +741,10 @@ public final class NotificationPanelViewController implements Dumpable {
             mNextCollapseSpeedUpFactor, false /* expandBecauseOfFalsing */);
     private final Runnable mAnimateKeyguardBottomAreaInvisibleEndRunnable =
             () -> mKeyguardBottomArea.setVisibility(View.GONE);
-
     private final Runnable mHeadsUpExistenceChangedRunnable = () -> {
         setHeadsUpAnimatingAway(false);
         updatePanelExpansionAndVisibility();
     };
-
     private final Runnable mMaybeHideExpandedRunnable = () -> {
         if (getExpansionFraction() == 0.0f) {
             postToView(mHideExpandedRunnable);
@@ -1146,11 +1126,6 @@ public final class NotificationPanelViewController implements Dumpable {
                 mOnEmptySpaceClickListener);
         addTrackingHeadsUpListener(mNotificationStackScrollLayoutController::setTrackingHeadsUp);
         setKeyguardBottomArea(mView.findViewById(R.id.keyguard_bottom_area));
-
-        mReTickerComeback = mView.findViewById(R.id.ticker_comeback);
-        mReTickerComebackIcon = mView.findViewById(R.id.ticker_comeback_icon);
-        mReTickerContentTV = mView.findViewById(R.id.ticker_content);
-        mNotificationStackScroller = mView.findViewById(R.id.notification_stack_scroller);
 
         initBottomArea();
 
@@ -2940,7 +2915,6 @@ public final class NotificationPanelViewController implements Dumpable {
         mLargeScreenShadeHeaderController.setShadeExpandedFraction(shadeExpandedFraction);
         mLargeScreenShadeHeaderController.setQsExpandedFraction(qsExpansionFraction);
         mLargeScreenShadeHeaderController.setQsVisible(mQsVisible);
-        reTickerViewVisibility();
     }
 
     private float getLockscreenShadeDragProgress() {
@@ -6577,105 +6551,4 @@ public final class NotificationPanelViewController implements Dumpable {
         /** Called when the shade starts opening. */
         void onOpenStarted();
     }
-
-    /* reTicker */
-
-    public void reTickerView(boolean visibility) {
-        if (!mReTickerStatus) return;
-        if (visibility && mReTickerComeback.getVisibility() == View.VISIBLE) {
-            reTickerDismissal();
-        }
-        String reTickerContent;
-        if (visibility && getExpandedFraction() != 1) {
-            mNotificationStackScroller.setVisibility(View.GONE);
-            StatusBarNotification sbn = mHeadsUpManager.getTopEntry().getRow().getEntry().getSbn();
-            Notification notification = sbn.getNotification();
-            String pkgname = sbn.getPackageName();
-            Drawable icon = null;
-            try {
-                if (pkgname.equals("com.android.systemui")) {
-                    icon = mView.getContext().getDrawable(notification.icon);
-                } else {
-                    icon = mView.getContext().getPackageManager().getApplicationIcon(pkgname);
-                }
-            } catch (NameNotFoundException e) {
-                return;
-            }
-            String content = notification.extras.getString("android.text");
-            if (TextUtils.isEmpty(content)) return;
-            reTickerContent = content;
-            String reTickerAppName = notification.extras.getString("android.title");
-            PendingIntent reTickerIntent = notification.contentIntent;
-            String mergedContentText = reTickerAppName + " " + reTickerContent;
-            mReTickerComebackIcon.setImageDrawable(icon);
-            Drawable dw = mView.getContext().getDrawable(R.drawable.reticker_background);
-            if (mReTickerColored) {
-                int col = notification.color;
-                // check if we need to override the color
-                if ((mAppExceptions.length & 1) == 0) {
-                    for (int i = 0; i < mAppExceptions.length; i += 2) {
-                        if (mAppExceptions[i].equals(pkgname)) {
-                            col = Color.parseColor(mAppExceptions[i + 1]);
-                            break;
-                        }
-                    }
-                }
-                dw.setTint(col);
-            } else {
-                dw.setTintList(null);
-            }
-            mReTickerComeback.setBackground(dw);
-            mReTickerContentTV.setText(mergedContentText);
-            mReTickerContentTV.setTextAppearance(mView.getContext(), R.style.TextAppearance_Notifications_reTicker);
-            mReTickerContentTV.setSelected(true);
-            RetickerAnimations.doBounceAnimationIn(mReTickerComeback);
-            if (reTickerIntent != null) {
-                mReTickerComeback.setOnClickListener(v -> {
-                    final GameSpaceManager gameSpace = mCentralSurfaces.getGameSpaceManager();
-                    if (gameSpace == null || !gameSpace.isGameActive()) {
-                        try {
-                            reTickerIntent.send();
-                        } catch (PendingIntent.CanceledException e) {
-                        }
-                    }
-                    RetickerAnimations.doBounceAnimationOut(mReTickerComeback, mNotificationStackScroller);
-                    reTickerViewVisibility();
-                });
-            }
-        } else {
-            reTickerDismissal();
-        }
-    }
-
-    private void reTickerViewVisibility() {
-        if (!mReTickerStatus) {
-            reTickerDismissal();
-            return;
-        }
-        mNotificationStackScroller.setVisibility(getExpandedFraction() == 0 ? View.GONE : View.VISIBLE);
-        if (getExpandedFraction() > 0) mReTickerComeback.setVisibility(View.GONE);
-        if (mReTickerComeback.getVisibility() == View.VISIBLE) {
-            mReTickerComeback.getViewTreeObserver().addOnComputeInternalInsetsListener(mInsetsListener);
-        } else {
-            mReTickerComeback.getViewTreeObserver().removeOnComputeInternalInsetsListener(mInsetsListener);
-        }
-    }
-
-    public void reTickerDismissal() {
-        RetickerAnimations.doBounceAnimationOut(mReTickerComeback, mNotificationStackScroller);
-        mReTickerComeback.getViewTreeObserver().removeOnComputeInternalInsetsListener(mInsetsListener);
-    }
-
-    private final OnComputeInternalInsetsListener mInsetsListener = internalInsetsInfo -> {
-        internalInsetsInfo.touchableRegion.setEmpty();
-        internalInsetsInfo.setTouchableInsets(InternalInsetsInfo.TOUCHABLE_INSETS_REGION);
-        int[] mainLocation = new int[2];
-        mReTickerComeback.getLocationOnScreen(mainLocation);
-        internalInsetsInfo.touchableRegion.set(new Region(
-            mainLocation[0],
-            mainLocation[1],
-            mainLocation[0] + mReTickerComeback.getWidth(),
-            mainLocation[1] + mReTickerComeback.getHeight()
-        ));
-    };
 }
