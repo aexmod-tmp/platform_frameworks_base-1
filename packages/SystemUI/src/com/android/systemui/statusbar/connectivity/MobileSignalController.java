@@ -48,7 +48,6 @@ import android.util.Log;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settingslib.SignalIcon.MobileIconGroup;
 import com.android.settingslib.graph.SignalDrawable;
-import com.android.settingslib.mobile.MobileMappings;
 import com.android.settingslib.mobile.MobileMappings.Config;
 import com.android.settingslib.mobile.MobileStatusTracker;
 import com.android.settingslib.mobile.MobileStatusTracker.MobileStatus;
@@ -221,9 +220,6 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
         }
         void observe() {
             ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(
-                    Settings.System.getUriFor(Settings.System.SHOW_FOURG_ICON), false,
-                    this, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.System.getUriFor(
                    Settings.System.SHOW_VOLTE_ICON),
                    false,this, UserHandle.USER_ALL);
@@ -233,7 +229,7 @@ public class MobileSignalController extends SignalController<MobileState, Mobile
             resolver.registerContentObserver(Settings.System.getUriFor(
                    Settings.System.VOWIFI_ICON),
                    false,this, UserHandle.USER_ALL);
-            resolver.registerContentObserver(Settings.System.getUriFor(
+           resolver.registerContentObserver(Settings.System.getUriFor(
                   Settings.System.VOWIFI_ICON_STYLE),
                   false,this, UserHandle.USER_ALL);
            updateSettings();
