@@ -6550,14 +6550,13 @@ public class NotificationManagerService extends SystemService {
                 callingUid, incomingUserId, true, false, "enqueueNotification", pkg);
         final UserHandle user = UserHandle.of(userId);
 
-        // ensure opPkg is delegate if the calling uid doesn't have permission to post
+        // Can throw a SecurityException if the calling uid doesn't have permission to post
         // as "pkg"
         final int notificationUid = resolveNotificationUid(opPkg, pkg, callingUid, userId);
 
         if (notificationUid == INVALID_UID) {
-            Slog.w(TAG, opPkg + ":" + callingUid + " doesn't have permission to post notification "
-                    + "for nonexistent pkg " + pkg + " in user " + userId);
-            return;
+            throw new SecurityException("Caller " + opPkg + ":" + callingUid
+                    + " trying to post for invalid pkg " + pkg + " in user " + incomingUserId);
         }
 
         checkRestrictedCategories(notification);
@@ -6977,7 +6976,8 @@ public class NotificationManagerService extends SystemService {
             return targetUid;
         }
 
-        return INVALID_UID;
+        throw new SecurityException("Caller " + callingPkg + ":" + callingUid
+                + " cannot post for pkg " + targetPkg + " in user " + userId);
     }
 
     public boolean hasFlag(final int flags, final int flag) {
