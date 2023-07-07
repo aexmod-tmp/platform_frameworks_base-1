@@ -1521,7 +1521,7 @@ class UserController implements Handler.Callback {
                 Slogf.w(TAG, "No user info for user #" + userId);
                 return false;
             }
-            if (foreground && (userInfo.isProfile() || userInfo.isParallel())) {
+            if (foreground && userInfo.isProfile()) {
                 Slogf.w(TAG, "Cannot switch to User #" + userId + ": not a full user");
                 return false;
             }
