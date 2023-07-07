@@ -6336,9 +6336,6 @@ public class UserManagerService extends IUserManager.Stub {
             if (targetUserId == callingUserId) {
                 return true;
             }
-            if (ParallelSpaceManagerService.canInteract(callingUserId, targetUserId)) {
-                return true;
-            }
             synchronized (mUsersLock) {
                 UserInfo callingUserInfo = getUserInfoLU(callingUserId);
                 if (callingUserInfo == null || callingUserInfo.isProfile()) {
